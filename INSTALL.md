@@ -1,95 +1,100 @@
-
-
-## **INSTALL.md**
-
 # Installation Guide
 
-Follow these steps to set up the project locally. This guide assumes you have a basic understanding of Node.js and Git.
-
----
+This guide will walk you through the process of setting up the Synapse project on your local machine for development and testing.
 
 ## Prerequisites
 
-Make sure you have the following installed:
+Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [npm](https://www.npmjs.com/) (comes with Node.js)
+- [Git](https://git-scm.com/)
 
-* **Node.js** (v18+ recommended)
-* **npm** (comes with Node.js)
-* **Git**
-* **A TiDB account** (if using TiDB for the backend)
-* **API keys** for AI integrations (OpenAI, Claude, etc.)
+## Setup
 
----
+### 1. Clone the Repository
 
-## Setup Steps
-
-1. **Clone the repository**:
+First, clone the project repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/project-name.git
-cd project-name
+git clone https://github.com/your-username/synaps-branch.git
+cd synaps-branch
 ```
 
-2. **Install dependencies**:
+### 2. Install Dependencies
+
+Install the necessary project dependencies using npm:
 
 ```bash
 npm install
 ```
 
-3. **Set up environment variables**:
+### 3. Set Up Environment Variables
 
-* Copy the example `.env` file:
+The project requires several environment variables to connect to services like TiDB Cloud and various AI model APIs.
+
+Create a new file named `.env` in the root of the project directory:
 
 ```bash
-cp .env.example .env
+touch .env
 ```
 
-* Open `.env` and fill in your API keys and configuration.
+Open the `.env` file and add the following variables. You will need to obtain these keys from their respective platforms.
 
-4. **Run the development server**:
+```env
+# TiDB Serverless Connection
+TIDB_HOST=your_tidb_host
+TIDB_PORT=4000
+TIDB_USER=your_tidb_user
+TIDB_PASSWORD=your_tidb_password
+
+# AI Model API Keys
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+KIMI_API_KEY=your_kimi_api_key
+GROK_API_KEY=your_grok_api_key
+
+# Other Services
+REDIS_URL=your_redis_url
+S3_BUCKET_NAME=your_s3_bucket_name
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+```
+
+### 4. Run Database Migrations
+
+The project includes database migration scripts to set up the required schema in your TiDB Serverless instance.
+*(Note: The command to run migrations will be added here once implemented.)*
+
+## Running the Application
+
+### Development Mode
+
+To start the development server with hot-reloading enabled:
 
 ```bash
 npm run dev
 ```
 
-* Open your browser at `http://localhost:3000`
+The application will be available at [http://localhost:3000](http://localhost:3000).
 
-5. **Optional: Build for production**:
+### Production Mode
+
+To build the application for production:
 
 ```bash
 npm run build
+```
+
+To start the production server:
+
+```bash
 npm run start
 ```
 
----
+## Linting
 
-## Notes
+To check the code for any linting errors:
 
-* If you encounter any issues, make sure Node.js and npm versions are compatible.
-* For AI integrations, ensure that your API keys have enough quota.
-* Check the **README.md** for project-specific instructions and screenshots.
-
----
-
-## **RUN\_INSTRUCTIONS.txt**
-
+```bash
+npm run lint
 ```
-1. Clone the repository:
-   git clone https://github.com/your-username/project-name.git
-   cd project-name
-
-2. Install dependencies:
-   npm install
-
-3. Set up environment variables:
-   cp .env.example .env
-   # Fill in your API keys and configuration in .env
-
-4. Run the development server:
-   npm run dev
-   # Open http://localhost:3000
-
-5. Optional: Build for production:
-   npm run build
-   npm run start
-```
-
