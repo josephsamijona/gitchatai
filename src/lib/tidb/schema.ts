@@ -254,12 +254,12 @@ export const SCHEMA_QUERIES = {
  */
 export async function initializeSchema(): Promise<void> {
   console.log('Initializing TiDB schema...');
-  
+
   try {
     // Create tables in dependency order
     const tableOrder = [
       'projects',
-      'conversations', 
+      'conversations',
       'branches',
       'messages',
       'documents',
@@ -288,10 +288,10 @@ export async function initializeSchema(): Promise<void> {
  */
 export async function dropSchema(): Promise<void> {
   console.log('Dropping TiDB schema...');
-  
+
   const tables = [
     'workflow_executions',
-    'external_integrations', 
+    'external_integrations',
     'performance_metrics',
     'team_members',
     'concept_relationships',
@@ -306,15 +306,15 @@ export async function dropSchema(): Promise<void> {
   try {
     // Disable foreign key checks
     await tidbClient.query('SET FOREIGN_KEY_CHECKS = 0');
-    
+
     for (const table of tables) {
       console.log(`Dropping table: ${table}`);
       await tidbClient.query(`DROP TABLE IF EXISTS ${table}`);
     }
-    
+
     // Re-enable foreign key checks
     await tidbClient.query('SET FOREIGN_KEY_CHECKS = 1');
-    
+
     console.log('Schema dropped successfully');
   } catch (error) {
     console.error('Schema drop failed:', error);
@@ -333,7 +333,7 @@ export async function checkSchema(): Promise<boolean> {
       WHERE table_schema = DATABASE()
       AND table_name IN ('conversations', 'branches', 'messages', 'projects', 'documents', 'concepts')
     `);
-    
+
     return result.rows[0].table_count === 6;
   } catch (error) {
     console.error('Schema check failed:', error);
@@ -357,7 +357,7 @@ export async function getSchemaStats(): Promise<Record<string, any>> {
       WHERE table_schema = DATABASE()
       ORDER BY total_size DESC
     `);
-    
+
     return result.rows.reduce((acc, row) => {
       acc[row.table_name] = {
         rows: row.table_rows,
