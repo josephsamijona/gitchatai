@@ -381,4 +381,18 @@ export class BranchRepository extends BaseRepository<Branch, CreateBranchInput, 
       throw new Error(`Failed to get branch path: ${error}`);
     }
   }
+
+  /**
+   * Find branches by conversation ID (alias for compatibility)
+   */
+  async getByConversationId(conversationId: string): Promise<Branch[]> {
+    return await this.findByConversation(conversationId);
+  }
+
+  /**
+   * Find branches by parent ID
+   */
+  async findByParentId(parentBranchId: string): Promise<Branch[]> {
+    return await this.findChildren(parentBranchId);
+  }
 }

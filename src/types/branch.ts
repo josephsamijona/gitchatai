@@ -16,7 +16,10 @@ export interface Branch {
   model: AIModel;
   contextSummary?: string;
   contextEmbedding: number[];
+  branchPoint?: string; // Message ID where branch was created
+  customInstructions?: string; // Custom AI instructions for this branch
   createdAt: Date;
+  updatedAt?: Date;
   messages?: Message[];
 }
 
@@ -30,6 +33,8 @@ export interface CreateBranchInput {
   model: AIModel;
   contextSummary?: string;
   fromMessageId?: string; // Branch from specific message
+  branchPoint?: string; // Message ID where branch was created
+  customInstructions?: string; // Custom AI instructions for this branch
 }
 
 /**

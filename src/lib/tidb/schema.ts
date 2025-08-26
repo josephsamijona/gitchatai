@@ -276,6 +276,9 @@ export async function initializeSchema(): Promise<void> {
       await tidbClient.query(SCHEMA_QUERIES[tableName as keyof typeof SCHEMA_QUERIES]);
     }
 
+    // Create real-time updates table for WebSocket collaboration
+    await createRealtimeUpdatesTable();
+
     console.log('Schema initialization completed successfully');
   } catch (error) {
     console.error('Schema initialization failed:', error);
@@ -290,6 +293,7 @@ export async function dropSchema(): Promise<void> {
   console.log('Dropping TiDB schema...');
 
   const tables = [
+    'realtime_updates',
     'workflow_executions',
     'external_integrations',
     'performance_metrics',
@@ -371,4 +375,33 @@ export async function getSchemaStats(): Promise<Record<string, any>> {
     console.error('Failed to get schema stats:', error);
     return {};
   }
+}
+
+/**
+ * Create real-time updates table for WebSocket collaboration
+ */
+export async function createRealtimeUpdatesTable(): Promise<void> {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS realtime_updates (
+      id VARCHAR(36) PRIMARY KEY,
+      project_id VARCHAR(36) NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      entity_id VARCHAR(36) NOT NULL,
+      entity_type VARCHAR(20) NOT NULL,
+      data JSON NOT NULL,
+      user_id VARCHAR(36) NOT NULL,
+      metadata JSON DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      
+      INDEX idx_project_created (project_id, created_at DESC),
+      INDEX idx_entity (entity_type, entity_id),
+      INDEX idx_user_activity (user_id, created_at DESC),
+      INDEX idx_type_created (type, created_at DESC),
+      
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `;
+
+  await client.executeQuery(createTableQuery);
+  console.log('Real-time updates table created successfully');
 }

@@ -78,6 +78,27 @@ export type {
   ConceptRelationshipType
 } from './knowledge';
 
+// Workspace management types
+export type {
+  WorkspaceContext,
+  WorkspaceSettings,
+  ChatHistory,
+  WorkspaceConversation,
+  WorkspaceBranch,
+  WorkspaceMessage,
+  MessageAttachment,
+  MessageReference,
+  WorkspaceActivity,
+  WorkspaceAnalytics,
+  ProjectTemplate,
+  WorkspaceWizardState,
+  WorkspaceSearchFilters,
+  WorkspaceSearchResult,
+  WorkspaceExportOptions,
+  WorkspaceBackup,
+  WorkspaceHealth
+} from './workspace';
+
 // Re-export existing types for compatibility
 export type * from './api';
 export type * from './tidb';
