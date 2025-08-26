@@ -30,7 +30,7 @@ export const SCHEMA_QUERIES = {
       conversation_id VARCHAR(36) NOT NULL,
       parent_branch_id VARCHAR(36),
       name VARCHAR(255) NOT NULL,
-      model ENUM('claude', 'gpt4', 'kimi', 'grok') NOT NULL,
+      model ENUM('claude', 'gpt4', 'kimi', 'grok', 'gemini') NOT NULL,
       context_summary TEXT,
       context_embedding VECTOR(1536),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

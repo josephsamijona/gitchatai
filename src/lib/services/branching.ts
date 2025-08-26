@@ -954,7 +954,7 @@ export class BranchingService {
   }
 
   private getModelGroup(model: AIModel): number {
-    const groups = { claude: 1, gpt4: 2, kimi: 3, grok: 4 };
+    const groups = { claude: 1, gpt4: 2, kimi: 3, grok: 4, gemini: 5 };
     return groups[model] || 0;
   }
 
@@ -963,7 +963,8 @@ export class BranchingService {
       claude: '#3b82f6', // blue
       gpt4: '#10b981',   // green
       kimi: '#ef4444',   // red
-      grok: '#8b5cf6'    // purple
+      grok: '#8b5cf6',   // purple
+      gemini: '#f59e0b'  // amber/orange
     };
     return colors[model] || '#6b7280';
   }

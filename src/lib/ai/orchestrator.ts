@@ -23,6 +23,7 @@ import { OpenAIClient } from './openai';
 import { ClaudeClient } from './claude';
 import { KimiClient } from './kimi';
 import { GrokClient } from './grok';
+import { GeminiClient } from './gemini';
 import { EmbeddingService } from './embeddings';
 
 interface ProcessedResponse extends ChatCompletionResponse {
@@ -374,6 +375,9 @@ export class ModelOrchestrator {
         case 'grok':
           client = new GrokClient(config);
           break;
+        case 'gemini':
+          client = new GeminiClient(config);
+          break;
         default:
           console.warn(`Unknown model type: ${model}`);
           continue;
@@ -492,7 +496,8 @@ export class ModelOrchestrator {
       claude: 0,
       gpt4: 0,
       kimi: 0,
-      grok: 0
+      grok: 0,
+      gemini: 0
     };
 
     // Base scoring
@@ -502,24 +507,33 @@ export class ModelOrchestrator {
     if (isCodeRelated) {
       scores.gpt4 += 0.3;
       scores.claude += 0.2;
+      scores.gemini += 0.25; // Gemini is strong at code
     }
 
     if (isCreative) {
       scores.claude += 0.3;
       scores.gpt4 += 0.2;
+      scores.gemini += 0.25;
     }
 
     if (isAnalytical) {
       scores.claude += 0.4;
       scores.gpt4 += 0.2;
+      scores.gemini += 0.3; // Gemini has strong reasoning
     }
 
     if (needsRealTimeData) {
       scores.grok += 0.5;
+      scores.gemini += 0.2; // Gemini can access real-time info with search
     }
 
     if (contentLength > 10000) {
       scores.claude += 0.2; // Better for long context
+      scores.gemini += 0.4; // Gemini has 1M token context window
+    }
+
+    if (contentLength > 100000) {
+      scores.gemini += 0.3; // Gemini excels at very long contexts
     }
 
     // Performance-based scoring
@@ -578,7 +592,8 @@ export class ModelOrchestrator {
       claude: 0.7,
       gpt4: 0.7,
       kimi: 0.6,
-      grok: 0.8
+      grok: 0.8,
+      gemini: 0.7
     };
 
     let temperature = baseTemperatures[model];
@@ -605,6 +620,9 @@ export class ModelOrchestrator {
         break;
       case 'grok':
         prompt = 'You are Grok, an AI assistant with access to real-time information. Be witty and informative.';
+        break;
+      case 'gemini':
+        prompt = 'You are Gemini, a highly capable AI assistant created by Google. Be helpful, accurate, and provide well-structured responses.';
         break;
     }
 
@@ -781,4 +799,69 @@ export class ModelOrchestrator {
  */
 export function createModelOrchestrator(config: OrchestratorConfig): ModelOrchestrator {
   return new ModelOrchestrator(config);
+}
+
+/**
+ * Create demo orchestrator configuration with all models including Gemini
+ */
+export function createDemoOrchestratorConfig(embeddingService?: EmbeddingService): OrchestratorConfig {
+  return {
+    models: {
+      claude: {
+        name: 'claude',
+        apiKey: process.env.ANTHROPIC_API_KEY || '',
+        enabled: !!process.env.ANTHROPIC_API_KEY,
+        maxTokens: 4096,
+        temperature: 0.7,
+        rateLimitRpm: 5000,
+        rateLimitTpm: 800000
+      },
+      gpt4: {
+        name: 'gpt4',
+        apiKey: process.env.OPENAI_API_KEY || '',
+        enabled: !!process.env.OPENAI_API_KEY,
+        maxTokens: 4096,
+        temperature: 0.7,
+        rateLimitRpm: 3500,
+        rateLimitTpm: 90000
+      },
+      kimi: {
+        name: 'kimi',
+        apiKey: process.env.KIMI_API_KEY || '',
+        baseUrl: 'https://api.moonshot.cn/v1',
+        enabled: !!process.env.KIMI_API_KEY,
+        maxTokens: 4096,
+        temperature: 0.6,
+        rateLimitRpm: 60,
+        rateLimitTpm: 200000
+      },
+      grok: {
+        name: 'grok',
+        apiKey: process.env.GROK_API_KEY || '',
+        baseUrl: 'https://api.x.ai/v1',
+        enabled: !!process.env.GROK_API_KEY,
+        maxTokens: 4096,
+        temperature: 0.8,
+        rateLimitRpm: 200,
+        rateLimitTpm: 120000
+      },
+      gemini: {
+        name: 'gemini',
+        apiKey: process.env.GEMINI_API_KEY || '',
+        enabled: !!process.env.GEMINI_API_KEY,
+        maxTokens: 8192,
+        temperature: 0.7,
+        rateLimitRpm: 1500,
+        rateLimitTpm: 32000
+      }
+    },
+    defaultModel: 'claude',
+    fallbackChain: ['claude', 'gpt4', 'gemini', 'kimi', 'grok'],
+    embeddingService,
+    contextRetrieval: {
+      enabled: !!embeddingService,
+      maxResults: 5,
+      similarityThreshold: 0.7
+    }
+  };
 }

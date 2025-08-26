@@ -1,9 +1,9 @@
 /**
  * AI model types and interfaces for multi-model orchestration
- * Defines standardized interfaces for Claude, GPT-4, Kimi, and Grok
+ * Defines standardized interfaces for Claude, GPT-4, Kimi, Grok, and Gemini
  */
 
-export type AIModel = 'claude' | 'gpt4' | 'kimi' | 'grok';
+export type AIModel = 'claude' | 'gpt4' | 'kimi' | 'grok' | 'gemini';
 
 export interface AIModelConfig {
   name: AIModel;
@@ -165,7 +165,7 @@ export interface ModelSwitchEvent {
 
 export interface AIModelError extends Error {
   model: AIModel;
-  type: 'api_error' | 'rate_limit' | 'timeout' | 'invalid_request' | 'context_limit' | 'unknown';
+  type: 'api_error' | 'rate_limit' | 'timeout' | 'invalid_request' | 'context_limit' | 'authentication' | 'content_filter' | 'unknown';
   statusCode?: number;
   retryable: boolean;
   retryAfter?: number;
@@ -177,7 +177,7 @@ export interface PromptOptimization {
   originalPrompt: string;
   optimizedPrompt: string;
   optimizations: Array<{
-    type: 'format' | 'length' | 'specificity' | 'examples' | 'structure';
+    type: 'format' | 'length' | 'specificity' | 'examples' | 'structure' | 'context' | 'reasoning';
     description: string;
     before: string;
     after: string;
