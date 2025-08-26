@@ -5,6 +5,8 @@
 
 import OpenAI from 'openai';
 import { createHash } from 'crypto';
+import { cache } from '../cache';
+import { performanceMonitor } from '../performance/monitor';
 import type {
   EmbeddingRequest,
   EmbeddingResponse,
@@ -17,18 +19,9 @@ interface CacheConfig {
   keyPrefix: string;
 }
 
-interface RedisClient {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, ttl?: number): Promise<void>;
-  del(key: string): Promise<number>;
-  exists(key: string): Promise<number>;
-  ping(): Promise<string>;
-}
-
 export class EmbeddingService {
   private openai: OpenAI;
-  private redis?: RedisClient;
-  private cache: CacheConfig;
+  private cacheConfig: CacheConfig;
   private performanceMetrics: {
     totalRequests: number;
     cacheHits: number;
@@ -40,7 +33,6 @@ export class EmbeddingService {
 
   constructor(
     private config: AIModelConfig,
-    redisClient?: RedisClient,
     cacheConfig?: Partial<CacheConfig>
   ) {
     this.openai = new OpenAI({
@@ -48,9 +40,8 @@ export class EmbeddingService {
       baseURL: config.baseUrl
     });
 
-    this.redis = redisClient;
-    this.cache = {
-      enabled: !!redisClient,
+    this.cacheConfig = {
+      enabled: true,
       ttl: 86400, // 24 hours default
       keyPrefix: 'synapse:embedding:',
       ...cacheConfig
@@ -157,19 +148,58 @@ export class EmbeddingService {
   }
 
   /**
-   * Generate single embedding with caching
+   * Generate single embedding with advanced caching
    */
   async generateSingleEmbedding(
     text: string, 
     model?: string, 
     dimensions?: number
   ): Promise<number[]> {
-    const response = await this.generateEmbeddings({
-      input: text,
-      model,
-      dimensions
-    });
-    return response.embeddings[0];
+    return await performanceMonitor.measureAsync(
+      'generate_single_embedding',
+      'computation',
+      async () => {
+        const cacheKey = this.generateCacheKey(text, model || 'text-embedding-3-small', dimensions);
+        
+        if (this.cacheConfig.enabled) {
+          try {
+            return await cache.embeddings(cacheKey, async () => {
+              const response = await this.generateEmbeddings({
+                input: text,
+                model,
+                dimensions
+              });
+              this.performanceMetrics.apiCalls++;
+              return response.embeddings[0];
+            });
+          } catch (error) {
+            console.error('Embedding cache error:', error);
+            // Fallback to direct generation
+            const response = await this.generateEmbeddings({
+              input: text,
+              model,
+              dimensions
+            });
+            this.performanceMetrics.apiCalls++;
+            return response.embeddings[0];
+          }
+        } else {
+          const response = await this.generateEmbeddings({
+            input: text,
+            model,
+            dimensions
+          });
+          this.performanceMetrics.apiCalls++;
+          return response.embeddings[0];
+        }
+      },
+      {
+        text: text.substring(0, 50),
+        model: model || 'text-embedding-3-small',
+        dimensions,
+        cached: this.cacheConfig.enabled
+      }
+    );
   }
 
   /**

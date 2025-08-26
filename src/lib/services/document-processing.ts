@@ -6,6 +6,15 @@
 import { tidbClient } from '../tidb/client';
 import { embeddings } from '../ai/embeddings';
 import { workspaceService } from './workspace';
+// Real-time collaboration - lazy import to avoid circular dependencies
+let realtimeCollaborationService: any = null;
+const getRealtimeService = async () => {
+  if (!realtimeCollaborationService) {
+    const { realtimeCollaborationService: service } = await import('./realtime-collaboration');
+    realtimeCollaborationService = service;
+  }
+  return realtimeCollaborationService;
+};
 import type {
   Document,
   CreateDocumentInput,
@@ -192,9 +201,10 @@ export class DocumentProcessingService {
   private updateProcessingStatus(documentId: string, status: DocumentProcessingStatus): void {
     this.processingQueue.set(documentId, status);
     
-    // In a real implementation, this would emit WebSocket events
-    // to notify connected clients about status updates
-    this.notifyStatusUpdate(documentId, status);
+    // Trigger real-time collaboration notifications (non-blocking)
+    this.notifyStatusUpdate(documentId, status).catch(error => {
+      console.error('Failed to notify status update:', error);
+    });
   }
 
   /**
@@ -518,15 +528,28 @@ export class DocumentProcessingService {
   /**
    * Notify clients about status updates via WebSocket
    */
-  private notifyStatusUpdate(documentId: string, status: DocumentProcessingStatus): void {
-    // In a real implementation, this would emit WebSocket events
+  private async notifyStatusUpdate(documentId: string, status: DocumentProcessingStatus): Promise<void> {
     console.log(`Status update for document ${documentId}:`, status);
     
-    // This would integrate with the WebSocket service:
-    // webSocketService.broadcast('document-processing-update', {
-    //   documentId,
-    //   status
-    // });
+    // Integrate with real-time collaboration service
+    try {
+      const rtService = await getRealtimeService();
+      const document = { 
+        id: documentId, 
+        filename: status.filename,
+        uploadedBy: status.userId
+      } as any; // Mock document object
+      
+      await rtService.onDocumentProcessed(
+        status.projectId,
+        document,
+        status.status,
+        Math.round(status.progress * 100)
+      );
+    } catch (error) {
+      console.error('Failed to send real-time document processing notification:', error);
+      // Don't fail the processing if real-time notification fails
+    }
   }
 
   /**

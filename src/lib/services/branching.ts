@@ -8,6 +8,15 @@ import { embeddings } from '../ai/embeddings';
 import { workspaceService } from './workspace';
 import { BranchRepository } from '../repositories/branch';
 import { MessageRepository } from '../repositories/message';
+// Real-time collaboration - lazy import to avoid circular dependencies
+let realtimeCollaborationService: any = null;
+const getRealtimeService = async () => {
+  if (!realtimeCollaborationService) {
+    const { realtimeCollaborationService: service } = await import('./realtime-collaboration');
+    realtimeCollaborationService = service;
+  }
+  return realtimeCollaborationService;
+};
 import type {
   Branch,
   CreateBranchInput,
@@ -116,6 +125,15 @@ export class BranchingService {
           messagesPreserved: preserveFullHistory ? branchContext.messages.length : 0
         }
       );
+
+      // Trigger real-time collaboration notifications
+      try {
+        const rtService = await getRealtimeService();
+        await rtService.onBranchCreated(sourceBranch.conversationId, newBranch, userId);
+      } catch (error) {
+        console.error('Failed to send real-time branch creation notification:', error);
+        // Don't fail the branch creation if real-time notification fails
+      }
 
       return newBranch;
 

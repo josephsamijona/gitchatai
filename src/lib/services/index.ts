@@ -28,6 +28,12 @@ export { universalSearchService } from './universal-search';
 export { webSocketService } from './websocket';
 export { realtimeCollaborationService } from './realtime-collaboration';
 
+// Performance optimization services (Task 10)
+export { redisClient, cache } from '../cache';
+export { performanceMonitor } from '../performance/monitor';
+export { queryOptimizer } from '../tidb/query-optimizer';
+export { connectionManager } from '../tidb/connection-manager';
+
 // Service types for better TypeScript integration
 export type {
   WorkspaceService,
@@ -113,5 +119,26 @@ export class ServiceFactory {
   
   getRealtimeCollaborationService() {
     return realtimeCollaborationService;
+  }
+
+  // Performance optimization services
+  getRedisClient() {
+    return redisClient;
+  }
+  
+  getCache() {
+    return cache;
+  }
+  
+  getPerformanceMonitor() {
+    return performanceMonitor;
+  }
+  
+  getQueryOptimizer() {
+    return queryOptimizer;
+  }
+  
+  getConnectionManager() {
+    return connectionManager;
   }
 }

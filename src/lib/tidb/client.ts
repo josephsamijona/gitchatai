@@ -1,5 +1,8 @@
 import mysql from 'mysql2/promise';
 import { z } from 'zod';
+import { connectionManager } from './connection-manager';
+import { queryOptimizer } from './query-optimizer';
+import { performanceMonitor } from '../performance/monitor';
 
 // Environment configuration schema
 const TiDBConfigSchema = z.object({
